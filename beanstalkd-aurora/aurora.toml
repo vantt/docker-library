@@ -1,0 +1,14 @@
+servers = ["52.221.223.247:11300","localhost:11300"]
+listen = "0.0.0.0:8080"
+version = 2.1
+
+[openpage]
+enabled = false
+
+[auth]
+enabled = false
+username = "admin"
+password = "admin"
+
+[sample]
+storage = "{}"

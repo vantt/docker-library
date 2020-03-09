@@ -1,0 +1,67 @@
+version: "2"
+
+networks:
+  gitea:
+    driver: bridge
+
+services:
+  server:
+    image: gitea:1.11.1
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - DB_TYPE="mysql"
+      - DB_HOST="db:3306"
+      - DB_NAME="gitea"
+      - DB_USER="root"
+      - DB_PASSWD="root"
+      - TZ=Asia/Ho_Chi_Minh
+    restart: always   
+    networks:
+      - gitea
+    volumes:
+      - /data/gitea_data:/data
+    ports:
+      - "3000:3000"
+      - "22:22"
+    depends_on:
+      - db
+  db:
+    image: vantt/mysql:latest
+    volumes_from:
+      - container:mysql_data
+    ports:
+      - "3306:3306"
+    networks:
+      - gitea
+    environment:
+      - MYSQL_ROOT_PASSWORD="root"
+      - MYSQL_USER="root"
+      - MYSQL_PASSWORD="root"
+      - MYSQL_DATABASE="gitea"
+    restart: always
+  toranproxy:
+    image: vantt/toranproxy:latest
+    volumes_from:
+      - container:toranproxy_data
+    links:
+      - server:git.vantt.net
+    ports:
+      - "8000:80"
+      - "44343:443"
+    environment:
+      APP_GOGS_HOST: git.vantt.net
+      APP_GOGS_PORT: 3000
+      APP_TORAN_HOST: packages.vantt.net
+      APP_TORAN_SOURCE_FILENAME: toran-proxy-v1.5.3.tgz
+      APP_TORAN_SOURCE: https://toranproxy.com/releases/toran-proxy-v1.5.3.tgz
+    networks:
+      gitea:
+        aliases:
+          - packages.vantt.net
+    restart: always
+
+# docker run --name gogs_mysql  -e MYSQL_ROOT_PASSWORD=root  --volumes-from=gogs_data -d anphabe/mysql:latest
+# docker run -v /data/gogs_data/gogs:/data --name gogs_data busybox true
+# docker run -v /data/gogs_data/mysql:/data --name mysql_data busybox true
+# docker run -v /data/gogs_data/toranproxy:/data --name toranproxy_data busybox true
