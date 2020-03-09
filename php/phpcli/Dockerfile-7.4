@@ -1,6 +1,6 @@
-FROM php:7.2.6-cli-alpine
+FROM php:7.4.3-cli-alpine
 
-ARG PHP_VERSION=7.2.6
+ARG PHP_VERSION=7.4.3
 
 ARG WORKDIRECTORY=/app
 
@@ -18,8 +18,10 @@ RUN set -xe \
     \
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
+                oniguruma-dev \
 		icu-dev \
 		postgresql-dev \
+                libzip-dev \
 		zlib-dev \
 		jpeg-dev \
 		libpng-dev \
@@ -35,9 +37,8 @@ RUN set -xe \
 		json \
 		intl \	
 		opcache \
-        mbstring \
-        zip \
-        pcntl \
+                zip \
+                pcntl \
 	\	
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install -j$(nproc) gd	 \
