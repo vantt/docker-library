@@ -1,0 +1,20 @@
+version: "2"
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs:ro
+    environment:
+      VIRTUAL_PROTO: "https"
+  mio:
+    image: vantt/apache
+    container_name: webserver
+    volumes:
+      - /data:/data
+    environment:
+      VIRTUAL_HOST: "vantt.mio,*.vantt.mio,symfony.mio,*.symfony.mio"
