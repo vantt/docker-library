@@ -11,10 +11,10 @@ ARG HOST_GROUP_NAME=www
 
 
 RUN set -xe \
-	&& apk add --no-cache git ssmtp \
-	&& echo 'Creating notroot user and group from host' \
-	&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
-    && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
+		&& apk add --no-cache git ssmtp \
+		&& echo 'Creating notroot user and group from host' \
+		&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
+		&& adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
 	\
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
@@ -35,10 +35,10 @@ RUN set -xe \
 		json \
 		intl \	
 		opcache \
-                mbstring \
-                zip \
-                pcntl \
-	        \	
+        mbstring \
+        zip \
+        pcntl \
+	\	
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install -j$(nproc) gd	 \
     && docker-php-ext-enable gd \

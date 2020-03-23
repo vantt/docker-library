@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  composer:
+    image: vantt/composer:1.10.1    
+    ports:
+      - 8080:8080
+    volumes:
+      - /etc/passwd:/etc/passwd,ro 
+      - /etc/group:/etc/group,ro 
+      - $SSH_AUTH_SOCK:$SSH_AUTH_SOCK
+      - $CACHE_FOLDER:/composer_cache 

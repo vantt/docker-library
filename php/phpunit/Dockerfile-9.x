@@ -1,7 +1,7 @@
 # PHPUnit Docker Container.
 FROM alpine as builder
 
-ARG PHPUNIT_VERSION=8.5.2
+ARG PHPUNIT_VERSION=9.0.1
 
 RUN echo 'BEGIN' \
     && set -xe \ 

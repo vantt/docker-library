@@ -2,7 +2,7 @@
 # - docker build -t devops/composer .
 #
 
-FROM composer:1.9.3
+FROM composer:1.10.1
 
 ENV COMPOSER_CACHE_DIR /composer_cache
 

@@ -1,5 +1,4 @@
-# PHPSpec Docker Container
-FROM composer:1.9
+FROM composer:1.10.1
 MAINTAINER Julien Breux <julien.breux@gmail.com>
 
 # Goto temporary directory
