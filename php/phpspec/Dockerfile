@@ -1,13 +1,20 @@
-FROM composer:1.10.1
+FROM devops/composer:1.10.1 as builder
 MAINTAINER Julien Breux <julien.breux@gmail.com>
-
-# Goto temporary directory
-WORKDIR /tmp
 
 # Run composer and phpspec installation.
 RUN composer selfupdate && \
-  composer require "phpspec/phpspec:~6.1.1" --dev && \
-  ln -s /tmp/vendor/bin/phpspec /usr/local/bin/phpspec
+  composer global require "phpspec/phpspec:~6.1.1" && \
+  ln -s /composer/vendor/bin/phpspec /usr/local/bin/phpspec
+
+FROM devops/phpcli:7.4.4
+
+COPY --from=builder /composer /composer
+
+USER root
+RUN ln -s /composer/vendor/bin/phpspec /usr/local/bin/phpspec && \
+    ln -s /composer/vendor/bin/phpspec /phpspec
+USER ${HOST_USER_NAME}
+
 
 # Set up the application directory.
 VOLUME ["/app"]

@@ -10,7 +10,7 @@ RUN echo 'BEGIN' \
     
 ########################
 
-FROM vantt/phpcli:7.4.4
+FROM devops/phpcli:7.4.4
 
 ARG WORKDIRECTORY=/app
 
