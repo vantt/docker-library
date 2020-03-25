@@ -1,4 +1,4 @@
-FROM nginx:1.17-alpine
+FROM nginx:1.17.9-alpine
 
 ARG HOST_USER_UID=1000
 ARG HOST_USER_GID=1000
