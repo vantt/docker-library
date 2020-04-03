@@ -97,7 +97,10 @@ RUN set -xe \
 	&& sed -e "s/^\;?opcache\.enable.*$/opcache.enable = 1/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^\;?opcache\.enable_cli.*$/opcache.enable_cli = 1/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^\;?opcache\.validate_timestamps.*$/opcache.validate_timestamps = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini 
+	&& sed -e "s/^\;?opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini \
+	\
+	&& sed -e "s/^\;?xdebug\.remote_enable.*$/xdebug.remote_enable = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;?xdebug\.remote_host.*$/xdebug.remote_host = host.docker.internal/g" -i /usr/local/etc/php/php.ini 
 
 
 VOLUME ["${WORKDIRECTORY}"]
