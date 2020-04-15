@@ -1,5 +1,22 @@
 version: '3.5'
 
+#volumes:
+    #    # this is for Native Linux (Ubuntu)
+    #    appVolume:
+    #        driver: local
+    #        driver_opts:
+    #            type: bind
+    #            device: ${PROJECT_FOLDER}
+    #            o: bind
+
+    # this is for MacOS
+    # appVolume:
+    #     driver: local
+    #     driver_opts:
+    #         type: nfs
+    #         o: addr=host.docker.internal,rw,nolock,hard,nointr,nfsvers=3
+    #         device: ":/System/Volumes/Data/$PWD/data"
+
 services:
   nifi:
     image: apache/nifi
