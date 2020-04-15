@@ -9,14 +9,10 @@ log:
 
 entryPoints:
   http:
-    address: :80
+    address: ":80"
 
   https:
-    address: :443
-    # tls:
-    #   certificates:
-    #     - certFile: /etc/traefik/certs/myKey.crt
-    #       keyFile: /etc/traefik/certs/myKey.key
+    address: ":443"
 
 # configure the Providers
 providers:
@@ -24,18 +20,11 @@ providers:
       watch: true
       directory: /etc/traefik/dynamic
       debugLogGeneratedTemplate: true
+
   docker:
       endpoint: unix:///var/run/docker.sock
       exposedByDefault: false
       watch: true
-    
-
-tls:
-  stores:
-    default:
-      defaultCertificate:
-        certFile: /etc/traefik/certs/myKey.crt
-        keyFile:  /etc/traefik/certs/myKey.key
 
 # Enable Traefik API & Dashboard
 api:
