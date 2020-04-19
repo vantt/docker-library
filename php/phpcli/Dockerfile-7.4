@@ -29,6 +29,7 @@ RUN set -xe \
 		pcre-dev \
 		freetype-dev \
 		libxml2-dev \
+		libsodium-dev \
 	\	
 	&& docker-php-ext-install -j$(nproc) \
 		pdo \
@@ -40,6 +41,7 @@ RUN set -xe \
         zip \
         pcntl \
 		sockets \
+		sodium \
 	\	
     && docker-php-ext-configure gd  \
     && docker-php-ext-install -j$(nproc) gd	 \
