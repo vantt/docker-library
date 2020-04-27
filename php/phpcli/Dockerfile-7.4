@@ -105,9 +105,11 @@ RUN set -xe \
 	&& sed -e "s/^\;?xdebug\.remote_enable.*$/xdebug.remote_enable = 1/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^\;?xdebug\.remote_host.*$/xdebug.remote_host = host.docker.internal/g" -i /usr/local/etc/php/php.ini 
 
-COPY ./myCA.pem /usr/local/etc/php/
-COPY ./myCA.pem /usr/local/share/ca-certificates/
-RUN update-ca-certificates
+COPY myCA.pem /usr/local/etc/php/
+COPY myCA.pem /usr/share/ca-certificates/extra/myCA.pem  
+RUN echo "extra/myCA.pem" >> /etc/ca-certificates.conf \
+	&& update-ca-certificates --fresh \
+	&& cat /etc/ssl/certs/ca-certificates.crt
 
 VOLUME ["${WORKDIRECTORY}"]
 
