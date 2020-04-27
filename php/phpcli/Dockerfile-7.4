@@ -80,6 +80,7 @@ RUN set -xe \
 
 ADD https://raw.githubusercontent.com/php/php-src/php-${PHP_VERSION}/php.ini-production /usr/local/etc/php/php.ini
 
+
 RUN set -xe \
 	&& echo "Modify php.ini config" \
 	&& sed -e "s/^short_open_tag .*$/short_open_tag = Off/g" -i /usr/local/etc/php/php.ini \
@@ -104,6 +105,9 @@ RUN set -xe \
 	&& sed -e "s/^\;?xdebug\.remote_enable.*$/xdebug.remote_enable = 1/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^\;?xdebug\.remote_host.*$/xdebug.remote_host = host.docker.internal/g" -i /usr/local/etc/php/php.ini 
 
+COPY ./myCA.pem /usr/local/etc/php/
+COPY ./myCA.pem /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
 VOLUME ["${WORKDIRECTORY}"]
 

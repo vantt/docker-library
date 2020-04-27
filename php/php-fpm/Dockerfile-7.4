@@ -81,7 +81,10 @@ RUN set -xe \
 
 ADD https://raw.githubusercontent.com/php/php-src/php-${PHP_VERSION}/php.ini-production /usr/local/etc/php/php.ini
 
-#COPY rootCA.pem /usr/local/etc/php/rootCA.pem
+
+COPY ./myCA.pem /usr/local/etc/php/
+COPY ./myCA.pem /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
 RUN set -xe \
 	&& echo "Modify php.ini config" \
