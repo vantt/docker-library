@@ -1,0 +1,20 @@
+version: "3.5"
+
+services:
+    whoami:
+        image: containous/whoami        
+        container_name: whoami.dev.mio 
+        volumes: 
+            - .:/certs
+        command: 
+            --cert /certs/myKey.crt --key /certs/myKey.key    
+
+    verifySSL:
+        depends_on: 
+            - whoami
+        image: devops/trust-store
+        build:
+            context: .
+            dockerfile: Dockerfile        
+        command: 
+            curl -v https://whoami.dev.mio:80/api
