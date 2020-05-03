@@ -16,5 +16,10 @@ services:
         build:
             context: .
             dockerfile: Dockerfile        
+<<<<<<< HEAD
         command: openssl s_client -showcerts -servername whoami.dev.mio -connect whoami.dev.mio:80
             
+=======
+        command: 
+            curl -v https://whoami.dev.mio:80/api
+>>>>>>> 2dbfbd8ad92596596fcae5a6aa1b9c56d927440f
