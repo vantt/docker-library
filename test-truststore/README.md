@@ -1,10 +1,6 @@
 # Test adding custom Certificate Authority into Docker Trust Store
 
-<<<<<<< HEAD
 ## 1. Self Signed Certificate Creation
-=======
-## Self Signed Certificate Creation
->>>>>>> 2dbfbd8ad92596596fcae5a6aa1b9c56d927440f
 
 ### Install mkcert 
 
