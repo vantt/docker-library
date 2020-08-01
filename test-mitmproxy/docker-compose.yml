@@ -1,0 +1,43 @@
+version: "3.5"
+networks: 
+    proxy:
+        external: true
+        name: https-proxy
+
+services:
+    whoami:
+        image: containous/whoami        
+        container_name: whoami.dev.mio 
+        volumes: 
+            - .:/certs
+        command: 
+            --cert /certs/myKey.crt --key /certs/myKey.key    
+        networks: 
+            - proxy    
+
+    mitmproxy:
+        image: mitmproxy/mitmproxy
+        depends_on: 
+            - whoami
+        ports: 
+            - 8080:8080
+            - 8081:8081
+        command: 
+            mitmweb --set ssl_insecure=true --web-host 0.0.0.0 #--set ssl_insecure=true
+        networks: 
+            - proxy        
+
+    testSSL:
+        depends_on: 
+            - mitmproxy
+        image: devops/trust-store
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment: 
+            - HTTP_PROXY=mitmproxy:8080
+            - HTTPS_PROXY=mitmproxy:8080
+        networks: 
+            - proxy        
+        command: 
+            while (1) curl --insecure https://whoami.dev.mio:80/api 
