@@ -11,48 +11,6 @@ networks:
         name: https-proxy
 
 services:
-  reverse-proxy:
-    image: traefik:v2.2   # The official v2 Traefik docker image
-    restart: always
-    
-    # Enables the web UI and tells Traefik to listen to docker
-    # We use configure file to set below params
-    # command: 
-        #- "--log.level=DEBUG"
-        #- "--api.insecure=true"
-        #- "--providers.docker=true"
-        #- "--providers.docker.exposedbydefault=false"
-        #- "--entrypoints.web.address=:80"
-        #- "--entrypoints.websecure.address=:443"
-        #- "--tls.stores.default.defaultCertificate.certFile=./cets/myKey.crt"
-        #- "--tls.stores.default.defaultCertificate.keyFile=./certs/myKey.key"
-
-    ports:
-      - 80:80     # The HTTP port
-      - 443:443   
-      #- "8080:8080" # The Web UI (enabled by --api.insecure=true)
-    
-    volumes:
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./etc/traefik/:/etc/traefik/
-
-    networks:
-      proxy:  {}
-
-  whoami:
-    image: containous/whoami
-    restart: always
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.dev.mio`)"
-      - "traefik.http.routers.whoami.entrypoints=http"
-      - "traefik.http.middlewares.whoami_https.redirectscheme.scheme=https"
-      - "traefik.http.routers.whoami_https.rule=Host(`whoami.dev.mio`)"
-      - "traefik.http.routers.whoami_https.entrypoints=https"
-      - "traefik.http.routers.whoami_https.tls=true"
-    networks:
-      - proxy    
 
 #########################################################
 # Jaeger AGENT Ports 
