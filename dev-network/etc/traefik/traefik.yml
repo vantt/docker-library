@@ -37,10 +37,10 @@ accessLog: {}
 # enable tracing feature using jaeger
 tracing:
   jaeger:
-    localAgentHostPort: jaeger:6831
-    samplingServerURL: http://jaeger:5778/sampling
+    localAgentHostPort: ${JAEGER_HOST}:6831
+    samplingServerURL: http://${JAEGER_HOST}:5778/sampling
     collector:
-        endpoint: http://jaeger:14268/api/traces?format=jaeger.thrift
+        endpoint: http://${JAEGER_HOST}:14268/api/traces?format=jaeger.thrift
 
 
 #certificatesResolvers:

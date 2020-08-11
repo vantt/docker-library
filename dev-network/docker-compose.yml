@@ -3,6 +3,13 @@
 # https://docs.traefik.io/reference/static-configuration/file/
 # https://docs.traefik.io/reference/dynamic-configuration/docker/
 
+
+######################################################################################################
+#
+## docker network create --driver=bridge --subnet=172.21.0.0/16 --gateway=172.21.0.1 https-proxy
+#
+######################################################################################################
+
 version: '3.5'
 
 networks:
@@ -11,6 +18,28 @@ networks:
         name: https-proxy
 
 services:
+
+  # docker run -d --restart=always --name=dnsmasq --network=https-proxy --cap-add=NET_ADMIN \
+  #     -p 127.0.0.53:53:53/tcp -p 127.0.0.53:53:53/udp \
+  #     -p 127.0.0.1:53:53/tcp -p 127.0.0.1:53:53/udp \
+  #     -p $MYIP:53:53/tcp -p $MYIP:53:53/udp \
+  #     andyshinn/dnsmasq:2.78 --address=/mio/$MYIP --server=8.8.8.8 --server=8.8.4.4
+  dnsmasq: 
+    image: andyshinn/dnsmasq:2.78
+    restart: always
+    command: 
+      - "--address=/mio/$MYIP"
+      - "--server=8.8.8.8" 
+      - "--server=8.8.4.4"
+    cap_add:
+      - NET_ADMIN
+    ports: 
+      - "53:53/tcp"
+      - "53:53/udp"
+
+    networks:
+      proxy:  {}
+
   reverse-proxy:
     image: traefik:v2.2   # The official v2 Traefik docker image
     restart: always
@@ -40,52 +69,19 @@ services:
     networks:
       proxy:  {}
 
-  whoami:
-    image: containous/whoami
-    restart: always
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.dev.mio`)"
-      - "traefik.http.routers.whoami.entrypoints=http"
-      - "traefik.http.middlewares.whoami_https.redirectscheme.scheme=https"
-      - "traefik.http.routers.whoami_https.rule=Host(`whoami.dev.mio`)"
-      - "traefik.http.routers.whoami_https.entrypoints=https"
-      - "traefik.http.routers.whoami_https.tls=true"
-    networks:
-      - proxy    
+  # whoami:
+  #   image: containous/whoami
+  #   restart: always
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.whoami.rule=Host(`whoami.dev.mio`)"
+  #     - "traefik.http.routers.whoami.entrypoints=http"
+  #     - "traefik.http.middlewares.whoami_https.redirectscheme.scheme=https"
+  #     - "traefik.http.routers.whoami_https.rule=Host(`whoami.dev.mio`)"
+  #     - "traefik.http.routers.whoami_https.entrypoints=https"
+  #     - "traefik.http.routers.whoami_https.tls=true"
+  #   networks:
+  #     - proxy   
 
-#########################################################
-# Jaeger AGENT Ports 
-#
-# 16686 HTTP  The UI port
-#
-# 6831	UDP	  accept jaeger.thrift in compact Thrift protocol used by most current Jaeger clients
-# 6832	UDP	  accept jaeger.thrift in binary Thrift protocol used by Node.js Jaeger client (because thriftrw npm package does not support compact protocol)
-# 5778	HTTP	serve configs, sampling strategies
-# 5775	UDP	  accept zipkin.thrift in compact Thrift protocol (deprecated; only used by very old Jaeger clients, circa 2016)
-# 14271	HTTP	Healthcheck at / and metrics at /metrics
-#
-#
-# Jaeger COLLECTOR Ports
-#
-# 14267	TChannel  used by jaeger-agent to send spans in jaeger.thrift format
-# 14250	gRPC	    used by jaeger-agent to send spans in model.proto format
-# 14268	HTTP	    can accept spans directly from clients in jaeger.thrift format over binary thrift protocol
-# 9411	HTTP	    can accept Zipkin spans in Thrift, JSON and Proto (disabled by default)
-# 14269	HTTP	    Healthcheck at / and metrics at /metrics
-#
-####################################################################
-  jaeger:
-    image: jaegertracing/all-in-one:1.7.0
-    networks:
-      proxy:  {}
-    # ports:
-    #   - 16686:16686 # The UI port
-    labels:
-      - traefik.enable=true # expose this container through traefik
-      - traefik.http.services.jaeger.loadbalancer.server.port=16686
-      - traefik.http.routers.jaeger.entrypoints=http
-      - traefik.http.routers.jaeger.rule=Host(`jaeger.dev.mio`)
-      - traefik.http.routers.jaeger.service=jaeger
-      - traefik.http.routers.jaeger.tls=false
-      - traefik.http.routers.jaeger.tls.certresolver=false
+
+  
