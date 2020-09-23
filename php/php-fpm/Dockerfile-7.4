@@ -11,7 +11,7 @@ ARG HOST_GROUP_NAME=www
 
 
 RUN set -xe \
-		&& apk add --no-cache git ssmtp \
+		&& apk add --no-cache git ssmtp linux-headers \
 		&& echo 'Creating notroot user and group from host' \
 		&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
         && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
@@ -48,6 +48,8 @@ RUN set -xe \
     && docker-php-ext-enable gd \
     \
 	&& pecl install \
+		protobuf \
+	    grpc \
 		apcu \
 		xdebug \
 		memcached \
@@ -55,6 +57,8 @@ RUN set -xe \
 		oauth \
 		mongodb \
     && docker-php-ext-enable \
+	    protobuf \
+	    grpc \
     	apcu \
     	xdebug \ 
     	memcached \
@@ -109,7 +113,10 @@ RUN set -xe \
 	&& sed -n -e '/^\;?xdebug\.remote_mode/!p' -e '$axdebug.remote_mode = jit' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
 	&& sed -n -e '/^\;?xdebug\.remote_host/!p' -e '$axdebug.remote_host = 10.254.254.254' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
 	&& sed -n -e '/^\;?xdebug\.port/!p' -e '$axdebug.port = 9000' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
-	&& sed -n -e '/^\;?xdebug\.idekey/!p' -e '$axdebug.idekey = PHPSTORM' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  
+	&& sed -n -e '/^\;?xdebug\.idekey/!p' -e '$axdebug.idekey = PHPSTORM' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& sed -n -e '/^\;?xdebug\.profiler_enable/!p' -e '$axdebug.profiler_enable = 0' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& sed -n -e '/^\;?xdebug\.profiler_enable_trigger/!p' -e '$axdebug.profiler_enable_trigger = 1' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \  
+	&& sed -n -e '/^\;?xdebug\.profiler_output_dir/!p' -e '$axdebug.profiler_output_dir = /app/var/profiler' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  
     # \
 	# && sed -e "s/^\;curl\.cainfo.*$/curl\.cainfo = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
     # && sed -e "s/^\;openssl\.cafile.*$/openssl\.cafile = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \

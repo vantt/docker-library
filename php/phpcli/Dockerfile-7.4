@@ -11,7 +11,7 @@ ARG HOST_GROUP_NAME=www
 
 
 RUN set -xe \
-	&& apk add --no-cache git \
+	&& apk add --no-cache git linux-headers \
 	&& echo 'Creating notroot user and group from host' \
 	&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
     && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
@@ -43,11 +43,14 @@ RUN set -xe \
 		sockets \
 		sodium \
 	\	
+	&& docker-php-ext-configure grpc  \
     && docker-php-ext-configure gd  \
     && docker-php-ext-install -j$(nproc) gd	 \
     && docker-php-ext-enable gd \
     \
 	&& pecl install \
+	    protobuf \
+	    grpc \
 		apcu \
 		xdebug \
 		memcached \
@@ -55,6 +58,8 @@ RUN set -xe \
 		oauth \
 		mongodb \
     && docker-php-ext-enable \
+		protobuf \
+	    grpc \
     	apcu \
     	xdebug \ 
     	memcached \
