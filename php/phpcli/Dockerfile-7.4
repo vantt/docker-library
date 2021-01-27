@@ -1,6 +1,6 @@
-FROM php:7.4.4-cli-alpine
+FROM php:7.4.11-cli-alpine
 
-ARG PHP_VERSION=7.4.4
+ARG PHP_VERSION=7.4.11
 
 ARG WORKDIRECTORY=/app
 
@@ -11,17 +11,17 @@ ARG HOST_GROUP_NAME=www
 
 
 RUN set -xe \
-	&& apk add --no-cache git linux-headers \
-	&& echo 'Creating notroot user and group from host' \
-	&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
-    && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
-    \
+		&& apk add --no-cache git ssmtp linux-headers \
+		&& echo 'Creating notroot user and group from host' \
+		&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
+        && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
+	\
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
         oniguruma-dev \
 		icu-dev \
 		postgresql-dev \
-        libzip-dev \
+        oniguruma-dev \
 		zlib-dev \
 		jpeg-dev \
 		libpng-dev \
@@ -42,30 +42,30 @@ RUN set -xe \
         pcntl \
 		sockets \
 		sodium \
+		bcmath \
 	\	
-	&& docker-php-ext-configure grpc  \
-    && docker-php-ext-configure gd  \
-    && docker-php-ext-install -j$(nproc) gd	 \
-    && docker-php-ext-enable gd \
-    \
+        && docker-php-ext-configure gd  --with-freetype --with-jpeg \
+        && docker-php-ext-install -j$(nproc) gd	 \
+        && docker-php-ext-enable gd \
+        \
 	&& pecl install \
-	    protobuf \
-	    grpc \
-		apcu \
-		xdebug \
-		memcached \
-		redis \ 
-		oauth \
-		mongodb \
+			protobuf \
+			grpc \
+			apcu \
+			xdebug \
+			memcached \
+			redis \ 
+			oauth \
+			mongodb \
     && docker-php-ext-enable \
-		protobuf \
-	    grpc \
-    	apcu \
-    	xdebug \ 
-    	memcached \
-    	redis \
-    	oauth \
-    	mongodb \
+	        protobuf \
+	        grpc \
+	    	apcu \
+	    	xdebug \ 
+	    	memcached \
+	    	redis \
+	    	oauth \
+	    	mongodb \
     \
     && apk add --no-cache imagemagick imagemagick-dev \		
 	&& pecl install imagick \
@@ -102,17 +102,27 @@ RUN set -xe \
 	&& sed -e "s/^disable_functions .*$/disable_functions = proc_open, popen, disk_free_space, diskfreespace, leak, system, shell_exec, escapeshellcmd, proc_nice, dl, symlink, show_source/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^max_execution_time .*$/max_execution_time = 60/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^max_execution_time .*$/max_execution_time = 60/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.enable.*$/opcache.enable = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.enable_cli.*$/opcache.enable_cli = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.validate_timestamps.*$/opcache.validate_timestamps = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.enable.*$/opcache.enable = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.enable_cli.*$/opcache.enable_cli = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.validate_timestamps.*$/opcache.validate_timestamps = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^mailhub.*$/mailhub=mail:1025/g" -i /etc/ssmtp/ssmtp.conf \
 	\
-	&& sed -e "s/^\;?xdebug\.remote_enable.*$/xdebug.remote_enable = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?xdebug\.remote_host.*$/xdebug.remote_host = host.docker.internal/g" -i /usr/local/etc/php/php.ini 
+	&& sed -n -e '/^\;?xdebug\.remote_enable/!p' -e '$axdebug.remote_enable = 1' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
+        && sed -n -e '/^\;?xdebug\.remote_host/!p' -e '$axdebug.remote_host = 10.254.254.254' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
+	&& sed -n -e '/^\;?xdebug\.remote_mode/!p' -e '$axdebug.remote_mode = jit' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
+	&& sed -n -e '/^\;?xdebug\.port/!p' -e '$axdebug.port = 9000' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  \
+	&& sed -n -e '/^\;?xdebug\.idekey/!p' -e '$axdebug.idekey = PHPSTORM' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& sed -n -e '/^\;?xdebug\.profiler_enable/!p' -e '$axdebug.profiler_enable = 0' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& sed -n -e '/^\;?xdebug\.profiler_enable_trigger/!p' -e '$axdebug.profiler_enable_trigger = 1' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \  
+	&& sed -n -e '/^\;?xdebug\.profiler_output_dir/!p' -e '$axdebug.profiler_output_dir = /app/var/profiler' -i /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini  
+        # \
+	# && sed -e "s/^\;curl\.cainfo.*$/curl\.cainfo = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
+        # && sed -e "s/^\;openssl\.cafile.*$/openssl\.cafile = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
 
-COPY myCA.pem /usr/local/etc/php/
-COPY myCA.pem /usr/share/ca-certificates/extra/myCA.pem  
-RUN echo "extra/myCA.pem" >> /etc/ca-certificates.conf \
+COPY rootCA.pem /usr/local/etc/php/
+COPY rootCA.pem /usr/share/ca-certificates/extra/rootCA.pem  
+RUN echo "extra/rootCA.pem" >> /etc/ca-certificates.conf \
 	&& update-ca-certificates --fresh \
 	&& cat /etc/ssl/certs/ca-certificates.crt
 

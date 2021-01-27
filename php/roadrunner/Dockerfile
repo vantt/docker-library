@@ -1,6 +1,6 @@
-FROM php:7.4.4-cli-alpine
+FROM php:7.4.11-cli-alpine
 
-ARG PHP_VERSION=7.4.4
+ARG PHP_VERSION=7.4.11
 
 ARG WORKDIRECTORY=/app
 
@@ -11,11 +11,11 @@ ARG HOST_GROUP_NAME=www
 
 
 RUN set -xe \
-	&& apk add --no-cache git \
-	&& echo 'Creating notroot user and group from host' \
-	&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
-        && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \
-    \
+		&& apk add --no-cache git ssmtp linux-headers \
+		&& echo 'Creating notroot user and group from host' \
+		&& addgroup -g ${HOST_USER_GID} -S ${HOST_GROUP_NAME} \
+        && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \	
+	\
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
         oniguruma-dev \
@@ -29,7 +29,8 @@ RUN set -xe \
 		pcre-dev \
 		freetype-dev \
 		libxml2-dev \
-	\
+		libsodium-dev \
+	\	
 	&& docker-php-ext-install -j$(nproc) \
 		pdo \
 		pdo_mysql \
@@ -40,28 +41,33 @@ RUN set -xe \
         zip \
         pcntl \
         sockets \
+	sodium \
         bcmath \
 	\
-    && docker-php-ext-configure gd  \
-    && docker-php-ext-install -j$(nproc) gd	 \
-    && docker-php-ext-enable gd \
+        && docker-php-ext-configure gd  --with-freetype --with-jpeg \
+        && docker-php-ext-install -j$(nproc) gd	 \
+        && docker-php-ext-enable gd \
     \
 	&& pecl install \
-		apcu \
-		xdebug \
-		memcached \
-		redis \
-		oauth \
-		mongodb \
+			protobuf \
+			grpc \
+			apcu \
+			xdebug \
+			memcached \
+			redis \ 
+			oauth \
+			mongodb \
     && docker-php-ext-enable \
-    	apcu \
-    	xdebug \
-    	memcached \
-    	redis \
-    	oauth \
-    	mongodb \
+	        protobuf \
+	        grpc \
+	    	apcu \
+	    	xdebug \ 
+	    	memcached \
+	    	redis \
+	    	oauth \
+	    	mongodb \
     \
-    && apk add --no-cache imagemagick imagemagick-dev \
+    && apk add --no-cache imagemagick imagemagick-dev \		
 	&& pecl install imagick \
 	&& docker-php-ext-enable imagick \
 	\
@@ -74,8 +80,7 @@ RUN set -xe \
 	&& apk add --no-cache --virtual .api-phpexts-rundeps $runDeps \
 	&& apk del .build-deps \
 	\
-	&& mkdir -p var/cache var/logs var/sessions
-
+	&& mkdir -p var/cache var/logs var/sessions 
 
 ADD https://raw.githubusercontent.com/php/php-src/php-${PHP_VERSION}/php.ini-production /usr/local/etc/php/php.ini
 
@@ -95,12 +100,22 @@ RUN set -xe \
 	&& sed -e "s/^disable_functions .*$/disable_functions = proc_open, popen, disk_free_space, diskfreespace, leak, system, shell_exec, escapeshellcmd, proc_nice, dl, symlink, show_source/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^max_execution_time .*$/max_execution_time = 60/g" -i /usr/local/etc/php/php.ini \
 	&& sed -e "s/^max_execution_time .*$/max_execution_time = 60/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.enable.*$/opcache.enable = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.enable_cli.*$/opcache.enable_cli = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.validate_timestamps.*$/opcache.validate_timestamps = 1/g" -i /usr/local/etc/php/php.ini \
-	&& sed -e "s/^\;?opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini
+	&& sed -e "s/^\;opcache\.enable.*$/opcache.enable = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.enable_cli.*$/opcache.enable_cli = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.validate_timestamps.*$/opcache.validate_timestamps = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^\;opcache\.revalidate_freq.*$/opcache.revalidate_freq = 1/g" -i /usr/local/etc/php/php.ini \
+	&& sed -e "s/^mailhub.*$/mailhub=mail:1025/g" -i /etc/ssmtp/ssmtp.conf 
+# \
+	# && sed -e "s/^\;curl\.cainfo.*$/curl\.cainfo = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
+        # && sed -e "s/^\;openssl\.cafile.*$/openssl\.cafile = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
 
-COPY --from=spiralscout/roadrunner:1.6.4 /usr/bin/rr /usr/local/bin/rr
+COPY rootCA.pem /usr/local/etc/php/
+COPY rootCA.pem /usr/share/ca-certificates/extra/rootCA.pem  
+RUN echo "extra/rootCA.pem" >> /etc/ca-certificates.conf \
+	&& update-ca-certificates --fresh \
+	&& cat /etc/ssl/certs/ca-certificates.crt
+	
+COPY --from=spiralscout/roadrunner:1.8.3 /usr/bin/rr /usr/local/bin/rr
 
 VOLUME ["${WORKDIRECTORY}"]
 WORKDIR ${WORKDIRECTORY}

@@ -1,4 +1,4 @@
-# This image will be tagged with the name: anphabe/base:14.04
+# This image will be tagged with the name: vantt/base:14.04
 # - docker build -t devops/composer .
 #
 

@@ -1,6 +1,6 @@
 FROM alpine
 
-COPY ./myCA.pem /usr/local/share/ca-certificates/myCA.crt
+COPY ./rootCA.pem /usr/local/share/ca-certificates/rootCA.crt
 
 RUN set -xe \
 	&& apk add --update curl openssl ca-certificates && rm -rf /var/cache/apk/* 

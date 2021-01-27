@@ -1,4 +1,4 @@
-FROM nginx:1.17.9-alpine
+FROM nginx:1.19.3-alpine
 
 ARG HOST_USER_UID=1000
 ARG HOST_USER_GID=1000
@@ -14,3 +14,5 @@ RUN set -xe \
 	&& mkdir -p /etc/nginx/sites-available 	
 
 COPY etc/nginx /etc/nginx/
+WORKDIR /app
+

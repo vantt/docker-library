@@ -1,8 +1,12 @@
 # docker-phpunit
 
 ### Build docker
+```
+docker build -f Dockerfile-9.x -t devops/phpunit:9.0.1 .
 
-`docker build -t devops/phpunit .`
+docker build -t devops/phpunit
+
+```
 
 
 ### Add command to your bash profile
