@@ -33,7 +33,8 @@ RUN set -xe \
 	\	
 	&& docker-php-ext-install -j$(nproc) \
 		pdo \
-		pdo_mysql \
+		pdo_mysql \		
+	    mysqli \
 		xml \
 		json \
 		intl \
