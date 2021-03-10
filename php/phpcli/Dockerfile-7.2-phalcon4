@@ -1,6 +1,6 @@
-FROM php:7.4-cli-alpine3.12
+FROM php:7.2.6-cli-alpine
 
-ARG PHP_VERSION=7.4.15
+ARG PHP_VERSION=7.2.34
 ARG PHALCON_VERSION=3.4.5
 
 ARG WORKDIRECTORY=/app
@@ -9,8 +9,6 @@ ARG HOST_USER_UID=1000
 ARG HOST_USER_GID=1000
 ARG HOST_USER_NAME=www
 ARG HOST_GROUP_NAME=www
-
-ENV LOCALTIME Asia/Ho_Chi_Minh
 
 COPY rootCA.pem /usr/local/etc/php/
 COPY rootCA.pem /usr/share/ca-certificates/extra/rootCA.pem
@@ -34,6 +32,7 @@ RUN set -xe \
     		pcntl \
             sockets \
             bcmath \
+            mbstring \
 ;
 RUN set -xe \
     && pecl install \
@@ -60,15 +59,11 @@ RUN set -xe \
     && docker-php-ext-install -j$(nproc) intl \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps5 $PHPIZE_DEPS oniguruma-dev \
-    && docker-php-ext-install -j$(nproc) mbstring  \
-;
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS libsodium-dev \
+    && apk add --no-cache --virtual .build-deps5 $PHPIZE_DEPS libsodium-dev \
     && docker-php-ext-install -j$(nproc) sodium \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps7 $PHPIZE_DEPS libzip-dev\
+    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS zlib-dev \
     && docker-php-ext-install -j$(nproc) zip \
 ;
 RUN set -xe \
@@ -87,7 +82,11 @@ RUN set -xe \
 	&& docker-php-ext-enable imagick \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps11 $PHPIZE_DEPS pcre-dev \
+	&& pecl install phalcon \
+	&& docker-php-ext-enable psr phalcon \
+;
+RUN set -xe \
+    && apk add --no-cache --virtual .build-deps12 $PHPIZE_DEPS pcre-dev \
     && pecl install oauth \
     && docker-php-ext-enable oauth \
 ;
@@ -96,7 +95,6 @@ RUN set -xe \
     && docker-php-ext-enable protobuf \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps12 oniguruma-dev libzip-dev \
     && pecl install grpc \
     && docker-php-ext-enable grpc \
 ;
@@ -106,10 +104,6 @@ RUN set -xe \
 	&& docker-php-ext-enable rdkafka \
 ;
 RUN set -xe \
-	&& pecl install psr phalcon \
-    && docker-php-ext-enable psr phalcon \
-;
-RUN set -xe \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
 			| tr ',' '\n' \
@@ -117,7 +111,7 @@ RUN set -xe \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --no-cache --virtual .api-phpexts-rundeps $runDeps \
-	&& apk del .build-deps1 .build-deps2 .build-deps3 .build-deps4 .build-deps5 .build-deps6 .build-deps7 .build-deps8 .build-deps9 .build-deps10 .build-deps11 .build-deps12 .build-deps13 \
+	&& apk del .build-deps1 .build-deps2 .build-deps3 .build-deps4 .build-deps5 .build-deps6 .build-deps8 .build-deps9 .build-deps10 .build-deps12 .build-deps13 \
 	\
 	&& mkdir -p var/cache var/logs var/sessions \
 ;

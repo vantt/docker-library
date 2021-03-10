@@ -1,6 +1,6 @@
-FROM php:7.4-cli-alpine3.12
+FROM php:8.0.2-cli-alpine
 
-ARG PHP_VERSION=7.4.15
+ARG PHP_VERSION=8.0.2
 ARG PHALCON_VERSION=3.4.5
 
 ARG WORKDIRECTORY=/app
@@ -9,8 +9,6 @@ ARG HOST_USER_UID=1000
 ARG HOST_USER_GID=1000
 ARG HOST_USER_NAME=www
 ARG HOST_GROUP_NAME=www
-
-ENV LOCALTIME Asia/Ho_Chi_Minh
 
 COPY rootCA.pem /usr/local/etc/php/
 COPY rootCA.pem /usr/share/ca-certificates/extra/rootCA.pem
@@ -25,15 +23,18 @@ RUN echo "extra/rootCA.pem" >> /etc/ca-certificates.conf \
     && adduser  -u ${HOST_USER_UID} -D -S -G ${HOST_GROUP_NAME} ${HOST_USER_NAME} \
 ;
 RUN set -xe \
+    && apk add --no-cache --virtual .build-deps4 $PHPIZE_DEPS oniguruma-dev \
+    && docker-php-ext-install -j$(nproc) bcmath \
+;
+RUN set -xe \
 	&& apk add --no-cache --virtual .build-deps1 $PHPIZE_DEPS \
 	&& docker-php-ext-install -j$(nproc) \
     		pdo \
     		pdo_mysql \
     		mysqli \
-    		json \
     		pcntl \
             sockets \
-            bcmath \
+            mbstring \
 ;
 RUN set -xe \
     && pecl install \
@@ -60,32 +61,32 @@ RUN set -xe \
     && docker-php-ext-install -j$(nproc) intl \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps5 $PHPIZE_DEPS oniguruma-dev \
-    && docker-php-ext-install -j$(nproc) mbstring  \
-;
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS libsodium-dev \
+    && apk add --no-cache --virtual .build-deps5 $PHPIZE_DEPS libsodium-dev \
     && docker-php-ext-install -j$(nproc) sodium \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps7 $PHPIZE_DEPS libzip-dev\
+    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS libzip-dev \
     && docker-php-ext-install -j$(nproc) zip \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps8 $PHPIZE_DEPS zlib-dev libmemcached-dev \
+    && apk add --no-cache --virtual .build-deps7 $PHPIZE_DEPS zlib-dev libmemcached-dev \
     && pecl install memcached \
     && docker-php-ext-enable memcached \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps9 $PHPIZE_DEPS jpeg-dev libpng-dev freetype-dev \
+    && apk add --no-cache --virtual .build-deps8 $PHPIZE_DEPS jpeg-dev libpng-dev freetype-dev \
     && docker-php-ext-configure gd  --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd	 \
 ;
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps10 imagemagick imagemagick-dev \
-	&& pecl install imagick \
-	&& docker-php-ext-enable imagick \
-;
+#RUN set -xe \
+#    && apk add --no-cache --virtual .build-deps9 imagemagick imagemagick-dev \
+#	&& pecl install imagick \
+#	&& docker-php-ext-enable imagick \
+#;
+#RUN set -xe \
+#	&& pecl install psr phalcon \
+#	&& docker-php-ext-enable psr phalcon \
+#;
 RUN set -xe \
     && apk add --no-cache --virtual .build-deps11 $PHPIZE_DEPS pcre-dev \
     && pecl install oauth \
@@ -97,17 +98,13 @@ RUN set -xe \
 ;
 RUN set -xe \
     && apk add --no-cache --virtual .build-deps12 oniguruma-dev libzip-dev \
-    && pecl install grpc \
+    && pecl install grpc-beta \
     && docker-php-ext-enable grpc \
 ;
 RUN set -xe \
 	&& apk add --no-cache --virtual .build-deps13 librdkafka-dev \
 	&& pecl install rdkafka-3.1.3 \
 	&& docker-php-ext-enable rdkafka \
-;
-RUN set -xe \
-	&& pecl install psr phalcon \
-    && docker-php-ext-enable psr phalcon \
 ;
 RUN set -xe \
 	&& runDeps="$( \
@@ -157,6 +154,7 @@ RUN set -xe \
     # && sed -e "s/^\;openssl\.cafile.*$/openssl\.cafile = \/usr\/local\/etc\/php\/rootCA\.pem/g" -i /usr/local/etc/php/php.ini \
 ;
 RUN set -xe \
+    && docker-php-ext-enable psr phalcon \
     && php -m \
     && php -m | grep phalcon
 
@@ -164,4 +162,4 @@ VOLUME ["${WORKDIRECTORY}"]
 
 WORKDIR ${WORKDIRECTORY}
 
-#USER ${HOST_USER_NAME}
+USER ${HOST_USER_NAME}

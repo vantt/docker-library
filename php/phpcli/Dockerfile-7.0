@@ -1,6 +1,6 @@
-FROM php:7.4-cli-alpine3.12
+FROM registry.miczone.asia/php/cli:7.0-alpine-312 
 
-ARG PHP_VERSION=7.4.15
+ARG PHP_VERSION=7.0.33
 ARG PHALCON_VERSION=3.4.5
 
 ARG WORKDIRECTORY=/app
@@ -9,8 +9,6 @@ ARG HOST_USER_UID=1000
 ARG HOST_USER_GID=1000
 ARG HOST_USER_NAME=www
 ARG HOST_GROUP_NAME=www
-
-ENV LOCALTIME Asia/Ho_Chi_Minh
 
 COPY rootCA.pem /usr/local/etc/php/
 COPY rootCA.pem /usr/share/ca-certificates/extra/rootCA.pem
@@ -34,18 +32,7 @@ RUN set -xe \
     		pcntl \
             sockets \
             bcmath \
-;
-RUN set -xe \
-    && pecl install \
-		apcu \
-		xdebug \
-		redis \
-        mongodb \
-    && docker-php-ext-enable \
-    	apcu \
-    	xdebug \
-    	redis \
-        mongodb \
+            mbstring \
 ;
 RUN set -xe \
     && apk add --no-cache --virtual .build-deps2 $PHPIZE_DEPS libxml2-dev \
@@ -56,58 +43,60 @@ RUN set -xe \
     && docker-php-ext-install -j$(nproc) opcache \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps4 $PHPIZE_DEPS icu-dev \
+    && apk add --no-cache --virtual .build-deps4 $PHPIZE_DEPS \
+    && apk add --no-cache --virtual .build-deps5 --repository http://dl-cdn.alpinelinux.org/alpine/v3.7/main icu-dev=59.1-r1 \
     && docker-php-ext-install -j$(nproc) intl \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps5 $PHPIZE_DEPS oniguruma-dev \
-    && docker-php-ext-install -j$(nproc) mbstring  \
-;
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS libsodium-dev \
-    && docker-php-ext-install -j$(nproc) sodium \
-;
-RUN set -xe \
-    && apk add --no-cache --virtual .build-deps7 $PHPIZE_DEPS libzip-dev\
+    && apk add --no-cache --virtual .build-deps6 $PHPIZE_DEPS zlib-dev \
     && docker-php-ext-install -j$(nproc) zip \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps8 $PHPIZE_DEPS zlib-dev libmemcached-dev \
+    && apk add --no-cache --virtual .build-deps7 $PHPIZE_DEPS zlib-dev libmemcached-dev \
     && pecl install memcached \
     && docker-php-ext-enable memcached \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps9 $PHPIZE_DEPS jpeg-dev libpng-dev freetype-dev \
+    && pecl install \
+		apcu \
+		xdebug-2.7.2 \
+		redis \
+    && docker-php-ext-enable \
+    	apcu \
+    	xdebug \
+    	redis \
+;
+RUN set -xe \
+    && apk add --no-cache --virtual .build-deps8 $PHPIZE_DEPS jpeg-dev libpng-dev freetype-dev \
     && docker-php-ext-configure gd  --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd	 \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps10 imagemagick imagemagick-dev \
+    && apk add --no-cache --virtual .build-deps9 imagemagick imagemagick-dev \
 	&& pecl install imagick \
 	&& docker-php-ext-enable imagick \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps11 $PHPIZE_DEPS pcre-dev \
-    && pecl install oauth \
-    && docker-php-ext-enable oauth \
+	&& apk add --no-cache --virtual .build-deps10 $PHPIZE_DEPS \
+    && curl -L -o /tmp/cphalcon.zip https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.zip \
+    && unzip -d /tmp/ /tmp/cphalcon.zip \
+    && cd /tmp/cphalcon-${PHALCON_VERSION}/build \
+	&& sh ./install \
+	&& echo "extension=phalcon.so" > /usr/local/etc/php/conf.d/phalcon.ini \
 ;
 RUN set -xe \
     && pecl install protobuf \
     && docker-php-ext-enable protobuf \
 ;
 RUN set -xe \
-    && apk add --no-cache --virtual .build-deps12 oniguruma-dev libzip-dev \
+    && apk add --no-cache --virtual .build-deps11 libzip-dev \
     && pecl install grpc \
     && docker-php-ext-enable grpc \
 ;
 RUN set -xe \
-	&& apk add --no-cache --virtual .build-deps13 librdkafka-dev \
+	&& apk add --no-cache --virtual .build-deps12 librdkafka-dev \
 	&& pecl install rdkafka-3.1.3 \
 	&& docker-php-ext-enable rdkafka \
-;
-RUN set -xe \
-	&& pecl install psr phalcon \
-    && docker-php-ext-enable psr phalcon \
 ;
 RUN set -xe \
 	&& runDeps="$( \
@@ -117,7 +106,7 @@ RUN set -xe \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --no-cache --virtual .api-phpexts-rundeps $runDeps \
-	&& apk del .build-deps1 .build-deps2 .build-deps3 .build-deps4 .build-deps5 .build-deps6 .build-deps7 .build-deps8 .build-deps9 .build-deps10 .build-deps11 .build-deps12 .build-deps13 \
+	&& apk del .build-deps1 .build-deps2 .build-deps3 .build-deps4 .build-deps5 .build-deps6 .build-deps7 .build-deps8 .build-deps9 .build-deps10 .build-deps11 .build-deps12 \
 	\
 	&& mkdir -p var/cache var/logs var/sessions \
 ;
